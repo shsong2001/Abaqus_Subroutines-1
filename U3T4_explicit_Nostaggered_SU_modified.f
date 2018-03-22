@@ -830,6 +830,8 @@
             double precision :: pPi		    ! Constant of pi
             double precision :: pRi		    ! Radius of concentration molecules
             double precision :: pImmobileConc		    ! Radius of concentration molecules
+            
+!--------------------------Constants used in modified PNP model-------------------------------------
                         
             ! integer
             integer :: kblock,ip,nn,ni,nj,i
@@ -861,14 +863,17 @@
 		cSat = props(11)
 		pa1 = props(12)
 		pa2 = props(13)
-
+        
+!--------------------------Parameters used in modified PNP model-------------------------------------
         pNa = 602.2140857
         pPi = 3.14159265358979311
         pRi = 0.502
         !pImmobileConc = 1.8e-3
         !pV_ges = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*(pImmobileConc)
         pV_ges = 4.0
-        pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)
+        pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
+!--------------------------Parameters used in modified PNP model-------------------------------------
+
         pGM  = half*pEM/(one+pNU)
         pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU))      
 
@@ -1148,9 +1153,9 @@
 !                        write(*,*) "A vector value (ZF/Rtheta Norm(elecfield)): ", NORM((pZ*pF/pRTHETA*pELECFIELD))
 !                    end if
 !                end if
-                if (Courant>0.1)   then
-                    write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
-                end if
+!                if (Courant>0.1)   then
+!                    write(*,*) "Courant number: ", Courant, "at ", jElem(kblock)
+!                end if
                 
 !                if (kblock==1) then
 !                    write(*,*) "Peclet number", Pe
@@ -1209,6 +1214,9 @@
 						rhs(kblock,dofni) = rhs(kblock,dofni) 	+ pQUAD*pWT(ip)*detJ(ip)*(matvec(S,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))) 
 !											- pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pEMCoup/pZ)*pQf*pID))
 				!--------------------------------------Concentration RHS--------------------------------------
+                
+        
+                !-------------------------- RHS modified PNP model-------------------------------------
                 if (pDensVolFrac>0.1) then
          					rhs(kblock,dofniT) = rhs(kblock,dofniT) &
 					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
@@ -1222,19 +1230,8 @@
 					+ (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
                 
                 end if
-!					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa1))))
-!                        do nj=1,iNODE ! ------------------------------- loop-j-----------------------------------------
-!                            dofnjT = iCORDTOTAL*nj
-!                            rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!                            - pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pELECFIELD*pa2))*pNN(ip,nj)*v(kblock,dofnjT)
-!                        end do ! ------------------------------- loop-j-----------------------------------------
-                    
-!         					rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-pDif*gCo))
-	
-!         					rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-!					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),((pDif*(pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*pELECFIELD)))&
-!					+ pDif*(pF*pZ)/(pRTHETA)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,((/1.0d0, 1.0d0, 1.0d0/)*pa))))
+                !-------------------------- RHS modified PNP model-------------------------------------
+                
 				!--------------------------------------Thermal Energy--------------------------------------
 						energy(kblock,iElTh)= energy(kblock,iElTh) + (pDif*pNN(ip,ni)*u(kblock,dofniT))
 				!--------------------------------------Kinetic Energy--------------------------------------
@@ -1245,17 +1242,7 @@
 					end do !------------------------------end-loop-ni----------------
 
 				end if
-				if (lflags(iOpCode).eq.jMassCalc) then
-!					Elesize=zero
-
-					pELECFIELD= ((/-5.0E-02, 0.0, 0.0/))
-
-
-!					Beta = Elesize/(2*pDif*pz*pF/pRTHETA*NORM(pELECFIELD))*Pe
-!					pA_Vector = pDif*pz*pF/pRTHETA*pELECFIELD
-!					pStability = pA_Vector*Beta*pa
-					
-        	            	        ! summation over node_i
+				if (lflags(iOpCode).eq.jMassCalc) then		
 					do ni=1,iNODE !-----------------------------loop-i--------------
                 		
 	                        	        ! current node dof
