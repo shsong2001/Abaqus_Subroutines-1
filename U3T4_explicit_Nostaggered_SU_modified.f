@@ -1031,28 +1031,50 @@
 			svars(kblock,2) = DefVol
 
             do i=1,iNODE
-                if (i==1) then
-                    Xp = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                    Xa = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
-                    Xb = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
-                    Xc = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
-                elseif (i==2) then
-                    Xp = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
-                    Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                    Xb = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
-                    Xc = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
-                elseif (i==3) then
-                    Xp = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
-                    Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                    Xb = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
+!                if (i==1) then
+!                    Xp = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+!                    Xa = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
+!                    Xb = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
+!                    Xc = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
+!                elseif (i==2) then
+!                    Xp = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
+!                    Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+!                    Xb = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
+!                    Xc = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
+!                elseif (i==3) then
+!                    Xp = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
+!                    Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+!                    Xb = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
 
-                    Xc = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
+!                    Xc = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
+!                elseif (i==4) then
+!                    Xp = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
+!                    Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+!                    Xb = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
+!                    Xc = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
+!                end if	   
+                if (i==1) then
+                    Xp = (/coords(kblock,1,1),coords(kblock,1,2),coords(kblock,1,3)/)
+                    Xa = (/coords(kblock,2,1),coords(kblock,2,2),coords(kblock,2,3)/)
+                    Xb = (/coords(kblock,3,1),coords(kblock,3,2),coords(kblock,3,3)/)
+                    Xc = (/coords(kblock,4,1),coords(kblock,4,2),coords(kblock,4,3)/)
+                elseif (i==2) then
+                    Xp = (/coords(kblock,2,1),coords(kblock,2,2),coords(kblock,2,3)/)
+                    Xa = (/coords(kblock,1,1),coords(kblock,1,2),coords(kblock,1,3)/)
+                    Xb = (/coords(kblock,3,1),coords(kblock,3,2),coords(kblock,3,3)/)
+                    Xc = (/coords(kblock,4,1),coords(kblock,4,2),coords(kblock,4,3)/)
+                elseif (i==3) then
+                    Xp = (/coords(kblock,3,1),coords(kblock,3,2),coords(kblock,3,3)/)
+                    Xa = (/coords(kblock,1,1),coords(kblock,1,2),coords(kblock,1,3)/)
+                    Xb = (/coords(kblock,2,1),coords(kblock,2,2),coords(kblock,2,3)/)
+
+                    Xc = (/coords(kblock,4,1),coords(kblock,4,2),coords(kblock,4,3)/)
                 elseif (i==4) then
-                    Xp = (/coords(kblock,4,1)+u(kblock,13),coords(kblock,4,2)+u(kblock,14),coords(kblock,4,3)+u(kblock,15)/)
-                    Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                    Xb = (/coords(kblock,2,1)+u(kblock,5),coords(kblock,2,2)+u(kblock,6),coords(kblock,2,3)+u(kblock,7)/)
-                    Xc = (/coords(kblock,3,1)+u(kblock,9),coords(kblock,3,2)+u(kblock,10),coords(kblock,3,3)+u(kblock,11)/)
-                end if	    
+                    Xp = (/coords(kblock,4,1),coords(kblock,4,2),coords(kblock,4,3)/)
+                    Xa = (/coords(kblock,1,1),coords(kblock,1,2),coords(kblock,1,3)/)
+                    Xb = (/coords(kblock,2,1),coords(kblock,2,2),coords(kblock,2,3)/)
+                    Xc = (/coords(kblock,3,1),coords(kblock,3,2),coords(kblock,3,3)/)
+                end if 
                 Xba(1) = Xb(1)-Xa(1)
                 Xba(2) = Xb(2)-Xa(2)
                 Xba(3) = Xb(3)-Xa(3)
@@ -1141,8 +1163,8 @@
 !                        write(*,*) "A vector value (ZF/Rtheta Norm(elecfield)): ", NORM((pZ*pF/pRTHETA*pELECFIELD))
 !                    end if
 
-!				Elesize = (((3.0d0/(pi*4.0d0))*(detJ(1)/6.0d0))**(one/3.0d0))*2
-				Elesize = pd_min
+				Elesize = (((3.0d0/(pi*4.0d0))*(detJ(1)/6.0d0))**(one/3.0d0))*2
+!				Elesize = pd_min
                 Pe = NORM((pZ*pF/pRTHETA*pELECFIELD*(Elesize)))/2
                 Courant = NORM((pDif*pZ*pF/pRTHETA*pELECFIELD))*dtimeCur/Elesize
 !                if (Pe>1.0) then
@@ -1211,6 +1233,12 @@
 !                    if (jElem(kblock)==6369) then
 !                        write(*,*) "pA_Vector: ", pA_Vector
 !                        write(*,*) "6369 sigma_k: ", sigma_k
+!                    end if
+!                    if ( ANY(jElem(kblock)==(/ 27973, 19133, 18510, 33377/)) ) then
+!                        write(*,*) "Element no.: ", jElem(kblock)
+!                        write(*,*) "pd_min: ", pd_min
+!                        write(*,*) "Elesize: ", Elesize
+!                        write(*,*) "electric field", pELECFIELD
 !                    end if
 					do ni=1,iNODE !-----------------------------loop-i--------------
 						pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
