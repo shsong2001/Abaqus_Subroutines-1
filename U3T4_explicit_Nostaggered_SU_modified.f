@@ -870,7 +870,7 @@
         pRi = 0.502
         !pImmobileConc = 1.8e-3
         !pV_ges = 4.0d0/3.0d0*pPi*(pRi**3)*pNa*(pImmobileConc)
-        pV_ges = 4.0
+        pV_ges = 40.0
         pImmobileConc = pV_ges / (4.0d0/3.0d0*pPi*(pRi**3)*pNa)        
 !--------------------------Parameters used in modified PNP model-------------------------------------
 
@@ -1141,7 +1141,8 @@
 !                        write(*,*) "A vector value (ZF/Rtheta Norm(elecfield)): ", NORM((pZ*pF/pRTHETA*pELECFIELD))
 !                    end if
 
-				Elesize = (((3.0d0/(pi*4.0d0))*(detJ(1)/6.0d0))**(one/3.0d0))*2
+!				Elesize = (((3.0d0/(pi*4.0d0))*(detJ(1)/6.0d0))**(one/3.0d0))*2
+				Elesize = pd_min
                 Pe = NORM((pZ*pF/pRTHETA*pELECFIELD*(Elesize)))/2
                 Courant = NORM((pDif*pZ*pF/pRTHETA*pELECFIELD))*dtimeCur/Elesize
 !                if (Pe>1.0) then
@@ -1169,7 +1170,6 @@
 
 				! Electrical Displacement given by -(minus)X epsilon0 Xepsilonr XElecfield
 				ElecDisp = pEPSILONZERO*pEPSILONR*pELECFIELD
-!				Elesize = pd_min
 				rhs(kblock,1:ndofel)=zero
 				if (lflags(iOpCode).eq.jIntForceAndDtStable) then
 !										
@@ -1196,12 +1196,22 @@
 !						write(*,*)"pQf",pQf
 					end if	
 !                    pElecField = ( (/0.0d0, 0.0d0, 0.05d0 /))
+
                     if (Pe>1.0d0) then
                         Pe = 1.0d0
+                    elseif (Pe<0.0) then
+                        write(*,*) "Error in Peclet number calculations!!"
+                        call XIT
                     end if
+                    
+
                     
                     pA_Vector = pDif*pZ*pF/pRTHETA*pELECFIELD                    
                     sigma_k = (Elesize/(2*NORM(pA_Vector)))*Pe
+!                    if (jElem(kblock)==6369) then
+!                        write(*,*) "pA_Vector: ", pA_Vector
+!                        write(*,*) "6369 sigma_k: ", sigma_k
+!                    end if
 					do ni=1,iNODE !-----------------------------loop-i--------------
 						pQf = pF*((pZ*pCo)+(cSat*(1.d0)))
 !						pQf = 0.0d0
@@ -1217,19 +1227,19 @@
                 
         
                 !-------------------------- RHS modified PNP model-------------------------------------
-                if (pDensVolFrac>0.1) then
-         					rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-                    - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
-					+ (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-                else
-         					rhs(kblock,dofniT) = rhs(kblock,dofniT) &
-					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
-					- pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
-                    - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
-					+ (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
-                
-                end if
+                        if (pDensVolFrac>0.1) then
+                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        else
+                                    rhs(kblock,dofniT) = rhs(kblock,dofniT) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(-(one-pDensVolFrac)*gCo)) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(((pF*pZ)/(pRTHETA)*pNN(ip,ni)*pCo*(one-pDensVolFrac)*pELECFIELD))) &
+                            - pQUAD*pWT(ip)*detJ(ip)*dot( (/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(pDif*pNN(ip,ni)*pCo*(1/(pImmobileConc))*gCo))&
+                            + (pF*pZ)/(pRTHETA)*(one-pDensVolFrac)*pQUAD*pWT(ip)*detJ(ip)*dot((/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/),(gCo*dot(pELECFIELD,(sigma_k*pA_Vector)*pa1)))
+                        
+                        end if
                 !-------------------------- RHS modified PNP model-------------------------------------
                 
 				!--------------------------------------Thermal Energy--------------------------------------
