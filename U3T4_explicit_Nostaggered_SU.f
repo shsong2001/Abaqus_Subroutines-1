@@ -1,7 +1,7 @@
         !DEC$ FREEFORM
         !===============================================================================
-        ! DEVELOPER: EMMA GRIFFITHS & EDGAR HUSSER
-        ! YEAR: 2017
+        ! DEVELOPER: EMMA GRIFFITHS
+        ! YEAR: 2018
         !===============================================================================
     
         ! include of ABAQUS subroutines
