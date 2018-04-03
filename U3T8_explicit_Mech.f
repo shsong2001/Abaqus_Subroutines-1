@@ -661,14 +661,13 @@
                     end if
         
                 end do
+                
                 !---------------------------------------------------------------------------
                     
                 ! identity matrix ----------------------------------------------------------
                 pID=zero
                 forall(i=1:iCORD) pID(i,i)=one
                 !---------------------------------------------------------------------------
-                
-                if (lflags(iOpCode).eq.jMassCalc) then ! compute mass matrix
                     
                     ! loop over element block
                     do kblock=1,nblock ! ---------------------------------------------------
@@ -762,223 +761,146 @@
                             end do
             
                         end do ! -----------------------------------------------------------
-                        
-                        !amass(kblock,1:ndofel,1:ndofel)=zero
-                        ! loop over all integration points (computation of mass matrix)
-                        do ip=1,iGP ! ------------------------------------------------------
+                                        
+                if (lflags(iOpCode).eq.jMassCalc) then ! compute mass matrix
+                    !amass(kblock,1:ndofel,1:ndofel)=zero
+                    ! loop over all integration points (computation of mass matrix)
+                    do ip=1,iGP ! ------------------------------------------------------
 
+                        ! summation over node_i
+                        do ni=1,iNODE !-----------------------------loop-i--------------
+            
+                            ! current node dof
+                            do i=1,iCORD
+                                dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
+                            end do
+                            
                             ! summation over node_i
-                            do ni=1,iNODE !-----------------------------loop-i--------------
-                
+                            do nj=1,iNODE !-------------------------loop-j--------------
+            
                                 ! current node dof
                                 do i=1,iCORD
-                                    dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
+                                    dofnj(i) = nj*iCORD-(iCORD-1)+(i-1)
                                 end do
                                 
-                                ! summation over node_i
-                                do nj=1,iNODE !-------------------------loop-j--------------
-                
-                                    ! current node dof
-                                    do i=1,iCORD
-                                        dofnj(i) = nj*iCORD-(iCORD-1)+(i-1)
-                                    end do
-                                    
-                                    ! regular mass matrix
-                                    amass(kblock,dofni,dofnj) = amass(kblock,dofni,dofnj) &
-                                                              + pQUAD*pWT(ip)*detJ(ip)*pRHO*matmat(pNN(ip,ni)*pID,pNN(ip,nj)*pID)
-                                    
-                                end do !--------------------------end-loop-j----------------
-            
-                            end do !------------------------------end-loop-i----------------
-            
-                        end do ! ----------------------------end-loop-ip--------------------
+                                ! regular mass matrix
+                                amass(kblock,dofni,dofnj) = amass(kblock,dofni,dofnj) &
+                                                          + pQUAD*pWT(ip)*detJ(ip)*pRHO*matmat(pNN(ip,ni)*pID,pNN(ip,nj)*pID)
+                                
+                            end do !--------------------------end-loop-j----------------
+        
+                        end do !------------------------------end-loop-i----------------
+        
+                    end do ! ----------------------------end-loop-ip--------------------
+                    
+                    ! mass lumbing
+                    do i=1,ndofel
+                        amass_row_sum = sum(amass(kblock,i,:))
+                        amass(kblock,i,:) = zero
+                        amass(kblock,i,i) = amass_row_sum
+                    end do
                         
-                        ! mass lumbing
-                        do i=1,ndofel
-                            amass_row_sum = sum(amass(kblock,i,:))
-                            amass(kblock,i,:) = zero
-                            amass(kblock,i,i) = amass_row_sum
+                        
+                elseif (lflags(iOpCode).eq.jIntForceAndDtStable) then !compute internal force + stable time increment    
+            
+                    rhs(kblock,1:ndofel)=zero
+                    ! loop over all integration points (computation of residuum)
+                    do ip=1,iGP ! ------------------------------------------------------
+        
+                        ! displacement gradient
+                        Ux = u(kblock,1:iCORD*iNODE:iCORD)
+                        Uy = u(kblock,2:iCORD*iNODE:iCORD)
+                        Uz = u(kblock,3:iCORD*iNODE:iCORD)
+                        H = zero
+                        do ni=1,iNODE
+                            H = H + dya( (/Ux(ni),Uy(ni),Uz(ni)/),(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
                         end do
-                        
-
-                    end do !----------------------------------------------------------------
-                        
-                elseif (lflags(iOpCode).eq.jIntForceAndDtStable) then !compute internal force + stable time increment
-
-                    ! loop over element block
-                    do kblock=1,nblock ! ---------------------------------------------------
-                
-                        ! loop over all integration points (computation of FE variables)
-                        do ip=1,iGP ! ------------------------------------------------------
-                
-                            ! get solution-dependent state variables (history variables)
-                
-                            ! natural coordinates of current ip
-                            xi1 = pGPCORD(ip,1)
-                            xi2 = pGPCORD(ip,2)
-                            xi3 = pGPCORD(ip,3)
-                
-                            ! coordinate vectors of current element
-                            X1 = coords(kblock,:,1)
-                            X2 = coords(kblock,:,2)
-                            x3 = coords(kblock,:,3)
+        
+                        ! small strain tensor
+                        Ee = half*(transpose(H) + H)
+                        ! stress
+                        call stresses_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
+        
+                        ! von Mises equivalent stress
+                        !vMeq = sqrt( half*( (SIG(1,1)- SIG(2,2))**(two) + (SIG(2,2)- SIG(3,3))**(two) + (SIG(3,3)- SIG(1,1))**(two) &
+                        !     + six*(SIG(1,2)*SIG(1,2) + SIG(2,3)*SIG(2,3) + SIG(3,1)*SIG(3,1)) ) )
             
-                            ! --------------------------------------------------------------
-                            if (iNODE==4) then
+                        !VARFLD(VPGP*(ip-1)+1:VPGP*ip,JELEM) = (/ stress(1,1),stress(1,2),stress(1,3), &
+                        !                                         stress(2,1),stress(2,2),stress(2,3), &
+                        !                                         stress(3,1),stress(3,2),stress(3,3) /)
+                        !VARFLD(VPGP*iGP+ip,JELEM) = vMeq
+        
+                        ! summation over node_i
+                        do ni=1,iNODE !-----------------------------loop-i--------------
             
-                                ! derivatives of shape functions with respect to natural coordinates                
-                                dNdXi1(1) = -one
-                                dNdXi2(1) = -one
-                                dNdXi3(1) = -one
-                
-                                dNdXi1(2) =  one
-                                dNdXi2(2) =  zero
-                                dNdXi3(2) =  zero
-                
-                                dNdXi1(3) =  zero
-                                dNdXi2(3) =  one
-                                dNdXi3(3) =  zero
-                
-                                dNdXi1(4) =  zero
-                                dNdXi2(4) =  zero
-                                dNdXi3(4) =  one
-                             
-                            else 
-                                stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
-                            end if
-            
-                            ! derivatives of physical coordinates with respect to natural coordinates                
-                            dX1dxi1=dot(X1,dNdXi1)
-                            dX1dxi2=dot(X1,dNdXi2)
-                            dX1dxi3=dot(X1,dNdXi3)
-            
-                            dX2dxi1=dot(X2,dNdXi1)
-                            dX2dxi2=dot(X2,dNdXi2)
-                            dX2dxi3=dot(X2,dNdXi3)
-            
-                            dX3dxi1=dot(X3,dNdXi1)
-                            dX3dxi2=dot(X3,dNdXi2)
-                            dX3dxi3=dot(X3,dNdXi3)
-            
-                            ! Jacobian determinant (detJ = 6V)
-                            detJ(ip) = dX1dxi1*dX2dxi2*dX3dxi3 + dX2dxi1*dX3dxi2*dX1dxi3 + dX3dxi1*dX1dxi2*dX2dxi3 &
-                                     - dX1dxi3*dX2dxi2*dX3dxi1 - dX2dxi3*dX3dxi2*dX1dxi1 - dX3dxi3*dX1dxi2*dX2dxi1
-            
-                            ! derivatives of shape functions with respect to physical coordinates  
-                            do nn=1,iNODE
-                                dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
-                                                            + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
-                                                            + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
-                                dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
-                                                            + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
-                                                            + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
-                                dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
-                                                            + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
-                                                            + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
+                            ! current node dof
+                            do i=1,iCORD
+                                dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
                             end do
             
-                        end do ! -----------------------------------------------------------       
-            
-                        rhs(kblock,1:ndofel)=zero
-                        ! loop over all integration points (computation of residuum)
-                        do ip=1,iGP ! ------------------------------------------------------
-            
-                            ! displacement gradient
-                            Ux = u(kblock,1:iCORD*iNODE:iCORD)
-                            Uy = u(kblock,2:iCORD*iNODE:iCORD)
-                            Uz = u(kblock,3:iCORD*iNODE:iCORD)
-                            H = zero
-                            do ni=1,iNODE
-                                H = H + dya( (/Ux(ni),Uy(ni),Uz(ni)/),(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
-                            end do
-            
-                            ! small strain tensor
-                            Ee = half*(transpose(H) + H)
-                            ! stress
-                            call stresses_lin_elastic(SIG,P,S,F,Ee,pID,pGM,pLAM)
-            
-                            ! von Mises equivalent stress
-                            !vMeq = sqrt( half*( (SIG(1,1)- SIG(2,2))**(two) + (SIG(2,2)- SIG(3,3))**(two) + (SIG(3,3)- SIG(1,1))**(two) &
-                            !     + six*(SIG(1,2)*SIG(1,2) + SIG(2,3)*SIG(2,3) + SIG(3,1)*SIG(3,1)) ) )
-                
-                            !VARFLD(VPGP*(ip-1)+1:VPGP*ip,JELEM) = (/ stress(1,1),stress(1,2),stress(1,3), &
-                            !                                         stress(2,1),stress(2,2),stress(2,3), &
-                            !                                         stress(3,1),stress(3,2),stress(3,3) /)
-                            !VARFLD(VPGP*iGP+ip,JELEM) = vMeq
-            
-                            ! summation over node_i
-                            do ni=1,iNODE !-----------------------------loop-i--------------
-                
-                                ! current node dof
-                                do i=1,iCORD
-                                    dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
-                                end do
-                
-                                ! internal residual force vector
-                                rhs(kblock,dofni) = rhs(kblock,dofni) + pQUAD*pWT(ip)*detJ(ip)*matvec(P,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
-            
-                            end do !------------------------------end-loop-i----------------
-            
-                        end do ! ----------------------------end-loop-ip--------------------
-                        
-                        cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
-                        do i=1,iNODE
-                            if (i==1) then
-                                Xp = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                                Xa = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-                                Xb = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-                                Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-                            elseif (i==2) then
-                                Xp = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-                                Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                                Xb = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-                                Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-                            elseif (i==3) then
-                                Xp = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-                                Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                                Xb = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-                                Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-                            elseif (i==4) then
-                                Xp = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-                                Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-                                Xb = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-                                Xc = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-                            end if
-                            Xba(1) = Xb(1)-Xa(1)
-                            Xba(2) = Xb(2)-Xa(2)
-                            Xba(3) = Xb(3)-Xa(3)
-                            Xca(1) = Xc(1)-Xa(1)
-                            Xca(2) = Xc(2)-Xa(2)
-                            Xca(3) = Xc(3)-Xa(3)
-                            Xpa(1) = Xp(1)-Xa(1)
-                            Xpa(2) = Xp(2)-Xa(2)
-                            Xpa(3) = Xp(3)-Xa(3)
-                            pNb = cross(Xba,Xca)
-                            pN = pNb/norm(pNb)
-                            pd = abs(dot(Xpa,pN))
-                            if (i==1) then
+                            ! internal residual force vector
+                            rhs(kblock,dofni) = rhs(kblock,dofni) + pQUAD*pWT(ip)*detJ(ip)*matvec(P,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
+        
+                        end do !------------------------------end-loop-i----------------
+        
+                    end do ! ----------------------------end-loop-ip--------------------
+                    
+                    cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
+                    do i=1,iNODE
+                        if (i==1) then
+                            Xp = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+                            Xa = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
+                            Xb = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
+                            Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
+                        elseif (i==2) then
+                            Xp = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
+                            Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+                            Xb = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
+                            Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
+                        elseif (i==3) then
+                            Xp = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
+                            Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+                            Xb = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
+                            Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
+                        elseif (i==4) then
+                            Xp = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
+                            Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
+                            Xb = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
+                            Xc = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
+                        end if
+                        Xba(1) = Xb(1)-Xa(1)
+                        Xba(2) = Xb(2)-Xa(2)
+                        Xba(3) = Xb(3)-Xa(3)
+                        Xca(1) = Xc(1)-Xa(1)
+                        Xca(2) = Xc(2)-Xa(2)
+                        Xca(3) = Xc(3)-Xa(3)
+                        Xpa(1) = Xp(1)-Xa(1)
+                        Xpa(2) = Xp(2)-Xa(2)
+                        Xpa(3) = Xp(3)-Xa(3)
+                        pNb = cross(Xba,Xca)
+                        pN = pNb/norm(pNb)
+                        pd = abs(dot(Xpa,pN))
+                        if (i==1) then
+                            pd_min = pd
+                        else
+                            if ( pd .lt. pd_min ) then
                                 pd_min = pd
-                            else
-                                if ( pd .lt. pd_min ) then
-                                    pd_min = pd
-                                end if
                             end if
-                        end do
-                        dtimeStable(kblock) = factorStable*(pd_min/cd)
-                        !dtimeStable(kblock) = 2.143102d-06
-                        
-                        !if (kblock==1) then
-                        !    write(*,*)"dtimeStable(kblock)"
-                        !    write(*,*)dtimeStable(kblock)
-                        !    write(*,*)"rhs(kblock=1,:)"
-                        !    write(*,*)rhs(kblock,:)
-                        !end if
-                        
-                    end do !----------------------------------------------------------------
+                        end if
+                    end do
+                    dtimeStable(kblock) = factorStable*(pd_min/cd)
+                    !dtimeStable(kblock) = 2.143102d-06
                     
-                    
-                    
-                end if
+                    !if (kblock==1) then
+                    !    write(*,*)"dtimeStable(kblock)"
+                    !    write(*,*)dtimeStable(kblock)
+                    !    write(*,*)"rhs(kblock=1,:)"
+                    !    write(*,*)rhs(kblock,:)
+                    !end if
+                                    
+                    end if
+                end do !----------------------------------------------------------------
+                
                     
             end if
                         
