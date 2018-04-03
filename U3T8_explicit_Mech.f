@@ -1,7 +1,7 @@
         !DEC$ FREEFORM
         !===============================================================================
-        ! DEVELOPER: EDGAR HUSSER
-        ! YEAR: 2017
+        ! DEVELOPER: EMMA GRIFFITHS
+        ! YEAR: 2018
         !===============================================================================
     
         ! include of ABAQUS subroutines
@@ -412,13 +412,15 @@
             double precision, parameter :: two=2.d0
             double precision, parameter :: four=4.d0
             double precision, parameter :: six=6.d0
+            double precision, parameter :: eight=8.d0
+            double precision, parameter :: Abcissa=SQRT(0.d0/3.d0)
             double precision, parameter :: factorStable=0.99d0
             
             ! parameters - problem specification
-            !parameter ( iGP=1, iCORD=3, iNODE=4 )
-            integer, parameter :: iGP=1
+            !parameter ( iGP=8, iCORD=3, iNODE=8 )
+            integer, parameter :: iGP=8
             integer, parameter :: iCORD=3
-            integer, parameter :: iNODE=4
+            integer, parameter :: iNODE=8
             
             !! parameters - material
             !double precision, parameter :: pEM=79000.d0
@@ -526,22 +528,8 @@
             double precision :: pNN(iGP,iNODE)      ! shape function matrix (interpolation matrix)
             double precision :: pID(iCORD,iCORD)    ! identity tensor
             
-            !double precision :: pGPCORD(iGP,iCORD)  ! integration point coordinates
-            !common pGPCORD
-            !double precision :: pQUAD               ! factor for quadrature rule
-            !common pQUAD
-            !double precision :: pWT(iGP)            ! integration point weights
-            !common pWT
-            !double precision :: pNN(iGP,iNODE)      ! shape function matrix (interpolation matrix)
-            !common pNN
-            !double precision :: pID(iCORD,iCORD)    ! identity tensor
-            !common pID
-            
             double precision :: amass_row_sum       ! sum of array row
             double precision :: cd,pd,pd_min
-            double precision :: Xp(iCORD),Xa(iCORD),Xb(iCORD),Xc(iCORD)
-            double precision :: Xba(iCORD),Xca(iCORD),Xpa(iCORD)
-            double precision :: pNb(iCORD),pN(iCORD)
 
             ! include others
             !INCLUDE 'COMMON.f'
@@ -627,13 +615,20 @@
                 pLAM = (pEM*pNU)/((one+pNU)*(one-two*pNU))
                     
                 ! integration point coordinates and weights --------------------------------
-                if (iGP==1) then ! HUGHES - The Finite Element Method 1987 (p. 174)
+                if (iGP==8) then
 
-                    pGPCORD(1,:) = (/ one/four, one/four, one/four /)
+                    pGPCORD(1,:) = (/ -Abcissa, -Abcissa, -Abcissa /)
+                    pGPCORD(2,:) = (/  Abcissa, -Abcissa, -Abcissa /)
+                    pGPCORD(3,:) = (/  Abcissa,  Abcissa, -Abcissa /)
+                    pGPCORD(4,:) = (/ -Abcissa,  Abcissa, -Abcissa /)
+                    pGPCORD(5,:) = (/ -Abcissa, -Abcissa,  Abcissa /)
+                    pGPCORD(6,:) = (/  Abcissa, -Abcissa,  Abcissa /)
+                    pGPCORD(7,:) = (/  Abcissa,  Abcissa,  Abcissa /)
+                    pGPCORD(8,:) = (/ -Abcissa,  Abcissa,  Abcissa /)
                         
-                    pWT(1) = one
+                    pWT(:) = (/ one, one, one, one, one, one, one, one /)
                         
-                    pQUAD = one/six
+                    pQUAD = one
                         
                 else
         
@@ -649,12 +644,17 @@
                     xi2=pGPCORD(ip,2)
                     xi3=pGPCORD(ip,3)
         
-                    if (iNODE==4) then ! cf. WRIGGERS - Nonlinear Finite Elemente Methods 2008 (p. 120)
+                    if (iNODE==8) then ! cf. WRIGGERS - Nonlinear Finite Elemente Methods 2008 (p. 120)
         
-                        pNN(ip,1) = one-xi1-xi2-xi3
-                        pNN(ip,2) = xi1
-                        pNN(ip,3) = xi2
-                        pNN(ip,4) = xi3
+                        pNN(ip,1) = one/eight*(1-xi1)*(1-xi2)*(1-xi3)
+                        pNN(ip,2) = one/eight*(1+xi1)*(1-xi2)*(1-xi3)
+                        pNN(ip,3) = one/eight*(1+xi1)*(1+xi2)*(1-xi3)
+                        pNN(ip,4) = one/eight*(1-xi1)*(1+xi2)*(1-xi3)
+                        pNN(ip,5) = one/eight*(1-xi1)*(1-xi2)*(1+xi3)
+                        pNN(ip,6) = one/eight*(1+xi1)*(1-xi2)*(1+xi3)
+                        pNN(ip,7) = one/eight*(1+xi1)*(1+xi2)*(1+xi3)
+                        pNN(ip,8) = one/eight*(1-xi1)*(1+xi2)*(1+xi3)
+                        
         
                     else
                         stop "Error in computation of shape functions. The number of nodes does not conform with the element type (4 node tetrahedral element)."
@@ -689,24 +689,40 @@
                             x3 = coords(kblock,:,3)
             
                             ! --------------------------------------------------------------
-                            if (iNODE==4) then
+                            if (iNODE==8) then
             
                                 ! derivatives of shape functions with respect to natural coordinates                
-                                dNdXi1(1) = -one
-                                dNdXi2(1) = -one
-                                dNdXi3(1) = -one
+                                dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
+                                dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
+                                dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
                 
-                                dNdXi1(2) =  one
-                                dNdXi2(2) =  zero
-                                dNdXi3(2) =  zero
+                                dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
+                                dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
+                                dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
                 
-                                dNdXi1(3) =  zero
-                                dNdXi2(3) =  one
-                                dNdXi3(3) =  zero
+                                dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
+                                dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
+                                dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
                 
-                                dNdXi1(4) =  zero
-                                dNdXi2(4) =  zero
-                                dNdXi3(4) =  one
+                                dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
+                                dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
+                                dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
+                
+                                dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
+                                dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
+                                dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
+                
+                                dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
+                                dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
+                                dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
+                
+                                dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
+                                dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
+                                dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
+                
+                                dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
+                                dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
+                                dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
                              
                             else 
                                 stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
@@ -725,9 +741,12 @@
                             dX3dxi2=dot(X3,dNdXi2)
                             dX3dxi3=dot(X3,dNdXi3)
             
-                            ! Jacobian determinant (detJ = 6V)
-                            detJ(ip) = dX1dxi1*dX2dxi2*dX3dxi3 + dX2dxi1*dX3dxi2*dX1dxi3 + dX3dxi1*dX1dxi2*dX2dxi3 &
-                                     - dX1dxi3*dX2dxi2*dX3dxi1 - dX2dxi3*dX3dxi2*dX1dxi1 - dX3dxi3*dX1dxi2*dX2dxi1
+                            ! Jacobian determinant
+                            JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
+                            JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
+                            JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
+                            
+                            detJ(ip) = det(JJ)
             
                             ! derivatives of shape functions with respect to physical coordinates  
                             do nn=1,iNODE
@@ -781,50 +800,6 @@
                             amass(kblock,i,i) = amass_row_sum
                         end do
                         
-                        !if (kblock==1) then
-                        !    
-                        !    write(*,*)"kblock",kblock
-                        !    write(*,*)"pRHO",pRHO
-                        !    write(*,*)"pQUAD",pQUAD
-                        !    write(*,*)"pWT",pWT
-                        !    write(*,*)"detJ",detJ
-                        !    write(*,*)"pGPCORD",pGPCORD
-                        !    write(*,*)"one",one
-                        !    write(*,*)"six",six
-                        !    write(*,*)"coords(kblock,:,:)"
-                        !    write(*,*)coords(kblock,1,:)
-                        !    write(*,*)coords(kblock,2,:)
-                        !    write(*,*)coords(kblock,3,:)
-                        !    write(*,*)coords(kblock,4,:)
-                        !    !write(*,*)"size(amass)"
-                        !    !write(*,*)size(amass)
-                            !write(*,*)"amass"
-                            !write(*,*)amass(kblock,1,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,2,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,3,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,4,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,5,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,6,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,7,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,8,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,9,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,10,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,11,:)
-                        !    write(*,*)" "
-                        !    write(*,*)amass(kblock,12,:)
-                        !    write(*,*)" "
-                        !    
-                        !end if
 
                     end do !----------------------------------------------------------------
                         
