@@ -419,10 +419,9 @@
             
             ! parameters - problem specification
             !parameter ( iGP=8, iCORD=3, iNODE=8 )
-            integer, parameter :: iGP=8		!Number of Gauss Points
-            integer, parameter :: iCORD=3	!Degrees of freedom (mechanical)
-            integer, parameter :: ICORDTOTAL=3  !Degrees of freedom (total per node (3 mech))
-            integer, parameter :: iNODE=8	!Number of nodes per element
+            integer, parameter :: iGP=8
+            integer, parameter :: iCORD=3
+            integer, parameter :: iNODE=8
             
             !! parameters - material
             !double precision, parameter :: pEM=79000.d0
@@ -672,182 +671,99 @@
                 do kblock=1,nblock ! ---------------------------------------------------
             
                     ! loop over all integration points (computation of FE variables)
-!                    do ip=1,iGP ! ------------------------------------------------------
+                    do ip=1,iGP ! ------------------------------------------------------
             
-!                        ! get solution-dependent state variables (history variables)
+                        ! get solution-dependent state variables (history variables)
             
-!                        ! natural coordinates of current ip
-!                        xi1 = pGPCORD(ip,1)
-!                        xi2 = pGPCORD(ip,2)
-!                        xi3 = pGPCORD(ip,3)
+                        ! natural coordinates of current ip
+                        xi1 = pGPCORD(ip,1)
+                        xi2 = pGPCORD(ip,2)
+                        xi3 = pGPCORD(ip,3)
             
-!                        ! coordinate vectors of current element
-!                        X1 = coords(kblock,:,1)
-!                        X2 = coords(kblock,:,2)
-!                        x3 = coords(kblock,:,3)
+                        ! coordinate vectors of current element
+                        X1 = coords(kblock,:,1)
+                        X2 = coords(kblock,:,2)
+                        x3 = coords(kblock,:,3)
         
-!                        ! --------------------------------------------------------------
-!                        if (iNODE==8) then
+                        ! --------------------------------------------------------------
+                        if (iNODE==8) then
         
-!                            ! derivatives of shape functions with respect to natural coordinates                
-!                            dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
-!                            dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
-!                            dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
+                            ! derivatives of shape functions with respect to natural coordinates                
+                            dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
+                            dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
+                            dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
             
-!                            dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
-!                            dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
-!                            dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
+                            dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
+                            dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
+                            dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
             
-!                            dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
-!                            dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
-!                            dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
+                            dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
+                            dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
+                            dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
             
-!                            dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
-!                            dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
-!                            dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
+                            dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
+                            dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
+                            dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
             
-!                            dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
-!                            dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
-!                            dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
+                            dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
+                            dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
+                            dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
             
-!                            dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
-!                            dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
-!                            dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
+                            dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
+                            dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
+                            dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
             
-!                            dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
-!                            dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
-!                            dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
+                            dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
+                            dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
+                            dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
             
-!                            dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
-!                            dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
-!                            dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
+                            dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
+                            dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
+                            dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
                          
-!                        else 
-!                            stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
-!                        end if
+                        else 
+                            stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
+                        end if
         
-!                        ! derivatives of physical coordinates with respect to natural coordinates                
-!                        dX1dxi1=dot(X1,dNdXi1)
-!                        dX1dxi2=dot(X1,dNdXi2)
-!                        dX1dxi3=dot(X1,dNdXi3)
+                        ! derivatives of physical coordinates with respect to natural coordinates                
+                        dX1dxi1=dot(X1,dNdXi1)
+                        dX1dxi2=dot(X1,dNdXi2)
+                        dX1dxi3=dot(X1,dNdXi3)
         
-!                        dX2dxi1=dot(X2,dNdXi1)
-!                        dX2dxi2=dot(X2,dNdXi2)
-!                        dX2dxi3=dot(X2,dNdXi3)
+                        dX2dxi1=dot(X2,dNdXi1)
+                        dX2dxi2=dot(X2,dNdXi2)
+                        dX2dxi3=dot(X2,dNdXi3)
         
-!                        dX3dxi1=dot(X3,dNdXi1)
-!                        dX3dxi2=dot(X3,dNdXi2)
-!                        dX3dxi3=dot(X3,dNdXi3)
+                        dX3dxi1=dot(X3,dNdXi1)
+                        dX3dxi2=dot(X3,dNdXi2)
+                        dX3dxi3=dot(X3,dNdXi3)
         
-!                        ! Jacobian determinant
-!                        JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
-!                        JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
-!                        JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
+                        ! Jacobian determinant
+                        JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
+                        JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
+                        JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
                         
-!                        detJ(ip) = det(JJ)
+                        detJ(ip) = det(JJ)
 
-!                        ! derivatives of shape functions with respect to physical coordinates  
-!                        do nn=1,iNODE
-!                            dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
-!                                                        + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
-!                                                        + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
-!                            dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
-!                                                        + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
-!                                                        + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
-!                            dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
-!                                                        + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
-!                                                        + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
-!                        end do
-!                    end do
+                        ! derivatives of shape functions with respect to physical coordinates  
+                        do nn=1,iNODE
+                            dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
+                                                        + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
+                                                        + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
+                            dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
+                                                        + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
+                                                        + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
+                            dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
+                                                        + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
+                                                        + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
+                        end do
+                    end do
                                         
                     if (lflags(iOpCode).eq.jMassCalc) then ! compute mass matrix
                         !amass(kblock,1:ndofel,1:ndofel)=zero
                         ! loop over all integration points (computation of mass matrix)
                         do ip=1,iGP ! ------------------------------------------------------
-                                                    ! get solution-dependent state variables (history variables)
-            
-                            ! natural coordinates of current ip
-                            xi1 = pGPCORD(ip,1)
-                            xi2 = pGPCORD(ip,2)
-                            xi3 = pGPCORD(ip,3)
-                
-                            ! coordinate vectors of current element
-                            X1 = coords(kblock,:,1)
-                            X2 = coords(kblock,:,2)
-                            x3 = coords(kblock,:,3)
-            
-                            ! --------------------------------------------------------------
-                            if (iNODE==8) then
-            
-                                ! derivatives of shape functions with respect to natural coordinates                
-                                dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
-                                dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
-                                dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
-                
-                                dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
-                                dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
-                                dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
-                
-                                dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
-                                dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
-                                dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
-                
-                                dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
-                                dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
-                                dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
-                
-                                dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
-                                dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
-                                dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
-                
-                                dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
-                                dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
-                                dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
-                
-                                dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
-                                dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
-                                dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
-                
-                                dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
-                                dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
-                                dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
-                             
-                            else 
-                                stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
-                            end if
-            
-                            ! derivatives of physical coordinates with respect to natural coordinates                
-                            dX1dxi1=dot(X1,dNdXi1)
-                            dX1dxi2=dot(X1,dNdXi2)
-                            dX1dxi3=dot(X1,dNdXi3)
-            
-                            dX2dxi1=dot(X2,dNdXi1)
-                            dX2dxi2=dot(X2,dNdXi2)
-                            dX2dxi3=dot(X2,dNdXi3)
-            
-                            dX3dxi1=dot(X3,dNdXi1)
-                            dX3dxi2=dot(X3,dNdXi2)
-                            dX3dxi3=dot(X3,dNdXi3)
-            
-                            ! Jacobian determinant
-                            JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
-                            JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
-                            JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
-                            
-                            detJ(ip) = det(JJ)
     
-                            ! derivatives of shape functions with respect to physical coordinates  
-                            do nn=1,iNODE
-                                dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
-                                                            + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
-                                                            + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
-                                dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
-                                                            + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
-                                                            + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
-                                dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
-                                                            + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
-                                                            + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
-                            end do
                             ! summation over node_i
                             do ni=1,iNODE !-----------------------------loop-i--------------
                 
@@ -882,95 +798,13 @@
                 
                         rhs(kblock,1:ndofel)=zero
                         ! loop over all integration points (computation of residuum)
-                        ! displacement gradient
-                        Ux = u(kblock,1:iCORD*iNODE:iCORD)
-                        Uy = u(kblock,2:iCORD*iNODE:iCORD)
-                        Uz = u(kblock,3:iCORD*iNODE:iCORD)
-                        H = zero
                         do ip=1,iGP ! ------------------------------------------------------
-                            ral coordinates of current ip
-                            xi1 = pGPCORD(ip,1)
-                            xi2 = pGPCORD(ip,2)
-                            xi3 = pGPCORD(ip,3)
-                
-                            ! coordinate vectors of current element
-                            X1 = coords(kblock,:,1)
-                            X2 = coords(kblock,:,2)
-                            x3 = coords(kblock,:,3)
             
-                            ! --------------------------------------------------------------
-                            if (iNODE==8) then
-            
-                                ! derivatives of shape functions with respect to natural coordinates                
-                                dNdXi1(1) = -one/eight*(1-xi2)*(1-xi3)
-                                dNdXi2(1) = -one/eight*(1-xi1)*(1-xi3)
-                                dNdXi3(1) = -one/eight*(1-xi1)*(1-xi2)
-                
-                                dNdXi1(2) =  one/eight*(1-xi2)*(1-xi3)
-                                dNdXi2(2) =  -one/eight*(1+xi1)*(1-xi3)
-                                dNdXi3(2) =  -one/eight*(1+xi1)*(1-xi2)
-                
-                                dNdXi1(3) =  one/eight*(1+xi2)*(1-xi3)
-                                dNdXi2(3) =  one/eight*(1+xi1)*(1-xi3)
-                                dNdXi3(3) =  -one/eight*(1+xi1)*(1+xi2)
-                
-                                dNdXi1(4) =  -one/eight*(1+xi2)*(1-xi3)
-                                dNdXi2(4) =  one/eight*(1-xi1)*(1-xi3)
-                                dNdXi3(4) =  -one/eight*(1-xi1)*(1+xi2)
-                
-                                dNdXi1(5) =  -one/eight*(1-xi2)*(1+xi3)
-                                dNdXi2(5) =  -one/eight*(1-xi1)*(1+xi3)
-                                dNdXi3(5) =  one/eight*(1-xi1)*(1-xi2)
-                
-                                dNdXi1(6) =  one/eight*(1-xi2)*(1+xi3)
-                                dNdXi2(6) =  -one/eight*(1+xi1)*(1+xi3)
-                                dNdXi3(6) =  one/eight*(1+xi1)*(1-xi2)
-                
-                                dNdXi1(7) =  one/eight*(1+xi2)*(1+xi3)
-                                dNdXi2(7) =  one/eight*(1+xi1)*(1+xi3)
-                                dNdXi3(7) =  one/eight*(1+xi1)*(1+xi2)
-                
-                                dNdXi1(8) =  -one/eight*(1+xi2)*(1+xi3)
-                                dNdXi2(8) =  one/eight*(1-xi1)*(1+xi3)
-                                dNdXi3(8) =  one/eight*(1-xi1)*(1+xi2)
-                             
-                            else 
-                                stop "Error in computation of shape function derivatives. The number of nodes does not conform with the element type (4 node tetrahedral element)."     
-                            end if
-            
-                            ! derivatives of physical coordinates with respect to natural coordinates                
-                            dX1dxi1=dot(X1,dNdXi1)
-                            dX1dxi2=dot(X1,dNdXi2)
-                            dX1dxi3=dot(X1,dNdXi3)
-            
-                            dX2dxi1=dot(X2,dNdXi1)
-                            dX2dxi2=dot(X2,dNdXi2)
-                            dX2dxi3=dot(X2,dNdXi3)
-            
-                            dX3dxi1=dot(X3,dNdXi1)
-                            dX3dxi2=dot(X3,dNdXi2)
-                            dX3dxi3=dot(X3,dNdXi3)
-            
-                            ! Jacobian determinant
-                            JJ(1,:) = (/dX1dxi1, dX2dxi1, dX3dxi1/)
-                            JJ(2,:) = (/dX1dxi2, dX2dxi2, dX3dxi2/)
-                            JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
-                            
-                            detJ(ip) = det(JJ)
-    
-                            ! derivatives of shape functions with respect to physical coordinates  
-                            do nn=1,iNODE
-                                dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
-                                                            + (dX3dxi1*dX2dxi3-dX2dxi1*dX3dxi3)*dNdXi2(nn) &
-                                                            + (dX2dxi1*dX3dxi2-dX3dxi1*dX2dxi2)*dNdXi3(nn) )
-                                dNdX2(ip,nn) = one/detJ(ip)*( (dX3dxi2*dX1dxi3-dX1dxi2*dX3dxi3)*dNdXi1(nn) &
-                                                            + (dX1dxi1*dX3dxi3-dX3dxi1*dX1dxi3)*dNdXi2(nn) &
-                                                            + (dX3dxi1*dX1dxi2-dX1dxi1*dX3dxi2)*dNdXi3(nn) )
-                                dNdX3(ip,nn) = one/detJ(ip)*( (dX1dxi2*dX2dxi3-dX2dxi2*dX1dxi3)*dNdXi1(nn) &
-                                                            + (dX2dxi1*dX1dxi3-dX1dxi1*dX2dxi3)*dNdXi2(nn) &
-                                                            + (dX1dxi1*dX2dxi2-dX2dxi1*dX1dxi2)*dNdXi3(nn) )
-                            end do
-                            
+                            ! displacement gradient
+                            Ux = u(kblock,1:iCORD*iNODE:iCORD)
+                            Uy = u(kblock,2:iCORD*iNODE:iCORD)
+                            Uz = u(kblock,3:iCORD*iNODE:iCORD)
+                            H = zero
                             do ni=1,iNODE
                                 H = H + dya( (/Ux(ni),Uy(ni),Uz(ni)/),(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/) )
                             end do
