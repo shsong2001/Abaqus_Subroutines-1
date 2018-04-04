@@ -410,6 +410,7 @@
             double precision, parameter :: half=0.5d0
             double precision, parameter :: one=1.d0
             double precision, parameter :: two=2.d0
+            double precision, parameter :: three=3.d0
             double precision, parameter :: four=4.d0
             double precision, parameter :: six=6.d0
             double precision, parameter :: eight=8.d0
@@ -529,7 +530,7 @@
             double precision :: pID(iCORD,iCORD)    ! identity tensor
             
             double precision :: amass_row_sum       ! sum of array row
-            double precision :: cd,pd,pd_min
+            double precision :: cd,volume,pd_min
 
             ! include others
             !INCLUDE 'COMMON.f'
@@ -741,7 +742,7 @@
                         JJ(3,:) = (/dX1dxi3, dX2dxi3, dX3dxi3/)
                         
                         detJ(ip) = det(JJ)
-        
+
                         ! derivatives of shape functions with respect to physical coordinates  
                         do nn=1,iNODE
                             dNdX1(ip,nn) = one/detJ(ip)*( (dX2dxi2*dX3dxi3-dX3dxi2*dX2dxi3)*dNdXi1(nn) &
@@ -831,49 +832,8 @@
                         end do ! ----------------------------end-loop-ip--------------------
                         
                         cd = sqrt( (pEM*(one-pNU))/(pRHO*(one+pNU)*(one-two*pNU)) )
-!                        do i=1,iNODE
-!                            if (i==1) then
-!                                Xp = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-!                                Xa = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-!                                Xb = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-!                                Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-!                            elseif (i==2) then
-!                                Xp = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-!                                Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-!                                Xb = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-!                                Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-!                            elseif (i==3) then
-!                                Xp = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-!                                Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-!                                Xb = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-!                                Xc = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-!                            elseif (i==4) then
-!                                Xp = (/coords(kblock,4,1)+u(kblock,10),coords(kblock,4,2)+u(kblock,11),coords(kblock,4,3)+u(kblock,12)/)
-!                                Xa = (/coords(kblock,1,1)+u(kblock,1),coords(kblock,1,2)+u(kblock,2),coords(kblock,1,3)+u(kblock,3)/)
-!                                Xb = (/coords(kblock,2,1)+u(kblock,4),coords(kblock,2,2)+u(kblock,5),coords(kblock,2,3)+u(kblock,6)/)
-!                                Xc = (/coords(kblock,3,1)+u(kblock,7),coords(kblock,3,2)+u(kblock,8),coords(kblock,3,3)+u(kblock,9)/)
-!                            end if
-!                            Xba(1) = Xb(1)-Xa(1)
-!                            Xba(2) = Xb(2)-Xa(2)
-!                            Xba(3) = Xb(3)-Xa(3)
-!                            Xca(1) = Xc(1)-Xa(1)
-!                            Xca(2) = Xc(2)-Xa(2)
-!                            Xca(3) = Xc(3)-Xa(3)
-!                            Xpa(1) = Xp(1)-Xa(1)
-!                            Xpa(2) = Xp(2)-Xa(2)
-!                            Xpa(3) = Xp(3)-Xa(3)
-!                            pNb = cross(Xba,Xca)
-!                            pN = pNb/norm(pNb)
-!                            pd = abs(dot(Xpa,pN))
-!                            if (i==1) then
-!                                pd_min = pd
-!                            else
-!                                if ( pd .lt. pd_min ) then
-!                                    pd_min = pd
-!                                end if
-!                            end if
-!                        end do ! -------------------------- end-loop-i ----------------------------
-                        pd_min = 3.125E-02
+                        volume = detJ(1)+detJ(2)+detJ(3)+detJ(4)+detJ(5)+detJ(6)+detJ(7)+detJ(8)
+                        pd_min = volume**(one/three)
                         dtimeStable(kblock) = factorStable*(pd_min/cd)
                         !dtimeStable(kblock) = 2.143102d-06
                         
