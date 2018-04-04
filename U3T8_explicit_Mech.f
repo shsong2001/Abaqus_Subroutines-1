@@ -419,9 +419,10 @@
             
             ! parameters - problem specification
             !parameter ( iGP=8, iCORD=3, iNODE=8 )
-            integer, parameter :: iGP=8
-            integer, parameter :: iCORD=3
-            integer, parameter :: iNODE=8
+            integer, parameter :: iGP=8		!Number of Gauss Points
+            integer, parameter :: iCORD=3	!Degrees of freedom (mechanical)
+            integer, parameter :: ICORDTOTAL=3  !Degrees of freedom (total per node (3 mech))
+            integer, parameter :: iNODE=8	!Number of nodes per element
             
             !! parameters - material
             !double precision, parameter :: pEM=79000.d0
