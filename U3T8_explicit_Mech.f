@@ -576,6 +576,8 @@
             double precision :: pGM
             double precision :: pLAM
                 
+            integer :: CordRange(iCORD) = (/(i, i=1,iCORD, 1)/)
+            integer :: NODERange(iNODE) = (/(i, i=1,iNODE, 1)/)
             
             ! integer
             integer :: kblock,ip,nn,ni,nj,i
@@ -766,17 +768,13 @@
                             do ni=1,iNODE !-----------------------------loop-i--------------
                 
                                 ! current node dof
-                                do i=1,iCORD
-                                    dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
-                                end do
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
                                 
                                 ! summation over node_i
                                 do nj=1,iNODE !-------------------------loop-j--------------
                 
                                     ! current node dof
-                                    do i=1,iCORD
-                                        dofnj(i) = nj*iCORD-(iCORD-1)+(i-1)
-                                    end do
+                                    dofnj(1:iCORD) = 1+iCORDTOTAL*((nj*1)-1)+(CordRange-1)
                                     
                                     ! regular mass matrix
                                     amass(kblock,dofni,dofnj) = amass(kblock,dofni,dofnj) &
@@ -820,9 +818,7 @@
                             do ni=1,iNODE !-----------------------------loop-i--------------
                 
                                 ! current node dof
-                                do i=1,iCORD
-                                    dofni(i) = ni*iCORD-(iCORD-1)+(i-1)
-                                end do
+                                dofni(1:iCORD) = 1+iCORDTOTAL*((ni*1)-1)+(CordRange-1)
                 
                                 ! internal residual force vector
                                 rhs(kblock,dofni) = rhs(kblock,dofni) + pQUAD*pWT(ip)*detJ(ip)*matvec(P,(/dNdX1(ip,ni),dNdX2(ip,ni),dNdX3(ip,ni)/))
