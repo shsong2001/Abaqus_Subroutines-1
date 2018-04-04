@@ -414,7 +414,7 @@
             double precision, parameter :: four=4.d0
             double precision, parameter :: six=6.d0
             double precision, parameter :: eight=8.d0
-            double precision, parameter :: Abcissa=SQRT(0.d0/3.d0)
+            double precision, parameter :: Abcissa=SQRT(1.d0/3.d0)
             double precision, parameter :: factorStable=0.99d0
             
             ! parameters - problem specification
